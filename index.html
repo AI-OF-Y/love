@@ -1,0 +1,176 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Trái Tim Cho Quỳnh Như</title>
+    <style>
+        body {
+            margin: 0;
+            padding: 0;
+            background-color: #0d0511;
+            overflow: hidden;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+            font-family: 'Arial', sans-serif;
+        }
+
+        .container {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+        }
+
+        /* Khung chứa tập hợp các trái tim nhỏ */
+        #heart-wrapper {
+            position: relative;
+            width: 400px;
+            height: 400px;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+        }
+
+        /* Định dạng cho từng mảnh trái tim nhỏ */
+        .mini-heart {
+            position: absolute;
+            width: 14px;
+            height: 14px;
+            background-color: #ff6b8b;
+            box-shadow: 0 0 8px #ff477e, 0 0 15px #ff1f5a;
+            
+            /* Đọc tọa độ đích từ JS */
+            left: var(--end-x);
+            top: var(--end-y);
+            
+            /* Hiệu ứng bay từ vị trí ngẫu nhiên ngoài màn hình vào đích */
+            animation: flyIn 3s cubic-bezier(0.25, 1, 0.5, 1) forwards;
+            animation-delay: var(--delay);
+            opacity: 0;
+        }
+
+        .mini-heart::before,
+        .mini-heart::after {
+            content: "";
+            position: absolute;
+            width: 14px;
+            height: 14px;
+            background-color: #ff6b8b;
+            border-radius: 50%;
+        }
+
+        .mini-heart::before { top: -7px; left: 0; }
+        .mini-heart::after { top: 0; left: 7px; }
+
+        /* Animation di chuyển từ ngoài vào và xoay góc thành hình trái tim */
+        @keyframes flyIn {
+            0% {
+                transform: translate(var(--start-x), var(--start-y)) rotate(0deg) scale(0.3);
+                opacity: 0;
+            }
+            20% {
+                opacity: 1;
+            }
+            100% {
+                transform: translate(0, 0) rotate(-45deg) scale(1);
+                opacity: 1;
+            }
+        }
+
+        /* Hiệu ứng nhịp đập cho CẢ TRÁI TIM LỚN sau khi ráp xong */
+        .beating {
+            animation: heartbeat 1.5s infinite ease-in-out;
+        }
+
+        @keyframes heartbeat {
+            0% { transform: scale(1); }
+            15% { transform: scale(1.15); }
+            30% { transform: scale(1); }
+            45% { transform: scale(1.1); }
+            60% { transform: scale(1); }
+            100% { transform: scale(1); }
+        }
+
+        /* Chữ Quỳnh Như phát sáng phía dưới */
+        .name-label {
+            margin-top: 20px;
+            font-size: 2.8rem;
+            font-weight: bold;
+            color: #fff;
+            text-transform: uppercase;
+            letter-spacing: 4px;
+            text-shadow: 0 0 10px #ff6b8b, 0 0 20px #ff477e, 0 0 35px #ff1f5a;
+            opacity: 0;
+            animation: fadeInText 2s forwards;
+            animation-delay: 4.5s; /* Hiện lên khi tim bắt đầu đập */
+        }
+
+        @keyframes fadeInText {
+            to { opacity: 1; }
+        }
+    </style>
+</head>
+<body>
+
+    <div class="container">
+        <div id="heart-wrapper"></div>
+        
+        <div class="name-label">Quỳnh Như</div>
+    </div>
+
+    <script>
+        const wrapper = document.getElementById('heart-wrapper');
+        const numberOfHearts = 160; // Số lượng trái tim nhỏ để tạo viền mượt mà
+        const sizeMultiplier = 11; // Độ lớn của trái tim tổng thể
+
+        // Công thức toán học định vị các điểm trên hình trái tim
+        function getHeartPoint(t) {
+            const x = 16 * Math.pow(Math.sin(t), 3);
+            const y = 13 * Math.cos(t) - 5 * Math.cos(2*t) - 2 * Math.cos(3*t) - Math.cos(4*t);
+            return { x, y };
+        }
+
+        // Kích thước ước tính của màn hình để ném các tim ra rìa ngoài
+        const screenDist = Math.max(window.innerWidth, window.innerHeight);
+
+        for (let i = 0; i < numberOfHearts; i++) {
+            const t = (i / numberOfHearts) * 2 * Math.PI;
+            const point = getHeartPoint(t);
+
+            const heart = document.createElement('div');
+            heart.classList.add('mini-heart');
+
+            // 1. Tính toán vị trí ĐÍCH (nằm trên viền trái tim lớn)
+            // Tâm của wrapper là (200, 200)
+            const endX = 200 + point.x * sizeMultiplier;
+            const endY = 180 - point.y * sizeMultiplier; // Trục Y trong màn hình ngược với đồ thị
+
+            // 2. Tính toán vị trí BẮT ĐẦU (từ một vòng tròn lớn ở rìa ngoài màn hình bay vào)
+            const angle = Math.random() * 2 * Math.PI;
+            const startX = Math.cos(angle) * screenDist;
+            const startY = Math.sin(angle) * screenDist;
+
+            // 3. Tạo độ trễ ngẫu nhiên để các hạt bay vào so le nhìn sẽ tự nhiên hơn
+            const delay = Math.random() * 1.8;
+
+            // Truyền các biến tọa độ vào CSS thông qua Custom Properties (--var)
+            heart.style.setProperty('--end-x', `${endX}px`);
+            heart.style.setProperty('--end-y', `${endY}px`);
+            heart.style.setProperty('--start-x', `${startX}px`);
+            heart.style.setProperty('--start-y', `${startY}px`);
+            heart.style.setProperty('--delay', `${delay}s`);
+
+            wrapper.appendChild(heart);
+        }
+
+        // Sau khi tất cả các mảnh đã bay vào và ráp xong (khoảng 4.5 giây)
+        // Kích hoạt class "beating" để toàn bộ thực thể trái tim bắt đầu đập
+        setTimeout(() => {
+            wrapper.classList.add('beating');
+        }, 4500);
+    </script>
+</body>
+</html>
